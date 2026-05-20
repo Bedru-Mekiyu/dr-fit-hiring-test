@@ -31,13 +31,11 @@ func GetRecipe(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 	}
 
-	var found *models.Recipe
 	for i := range recipes {
 		if recipes[i].ID == id {
-			found = &recipes[i]
-			break
+			return c.JSON(recipes[i])
 		}
 	}
 
-	return c.JSON(found)
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "recipe not found"})
 }
