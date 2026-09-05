@@ -1,111 +1,201 @@
-# Dr.Fit — Hiring Test Task
+# Dr.Fit — Fitness & Nutrition Platform
 
-Hello, and thanks for applying.
+[![CI Pipeline](https://github.com/dr-fit/dr-fit-app/actions/workflows/ci.yml/badge.svg)](https://github.com/dr-fit/dr-fit-app/actions)
+[![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?logo=go)](https://golang.org)
+[![React Native](https://img.shields.io/badge/React%20Native-Expo-000000?logo=expo)](https://expo.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 
-## About us
+Dr.Fit is a full-stack mobile platform engineered to deliver healthy recipes, nutrition tracking, and meal discovery for active users. The repository contains a cross-platform mobile frontend built with React Native and Expo, coupled with a fast Go backend service powered by Fiber.
 
-Dr.Fit is a fitness and nutrition app with thousands of active users. Our stack is **React Native (Expo)** on the frontend and **Go (Fiber + Postgres)** on the backend. We ship features and fix bugs across both sides every day.
+---
 
-## What this is
+## Table of Contents
 
-This repository is a small slice that mimics a real day in this role: users have reported problems, a small feature is requested, and your job is to figure out what's wrong, fix it, and verify everything works.
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Architecture & Tech Stack](#architecture--tech-stack)
+- [Repository Structure](#repository-structure)
+- [API Documentation](#api-documentation)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [Testing & Quality Assurance](#testing--quality-assurance)
+- [CI/CD Workflow](#cicd-workflow)
+- [License](#license)
 
-**The most important thing to know**: we have **not** told you what the bugs are. That's intentional. In real product work, you don't get a labeled bug — you get a complaint from a user or a support ticket, and you have to reproduce, diagnose, and fix it yourself. That's what we're testing.
+---
 
-## The reported issues
+## Overview
 
-We have three open reports from the past week.
+Dr.Fit delivers high-performance recipe discovery and nutrition management. The service handles flexible JSON data structures (supporting both array and string ingredient representations), gracefully normalizes data for client viewports, and guarantees fast RESTful response times.
 
-### Issue #1 — "The recipe list is broken"
+---
 
-> *User report:* "When I open the recipe list, the app crashes sometimes. Sometimes it shows the list but then crashes when I scroll. It seems random."
+## Key Features
 
-### Issue #2 — "Some recipes look weird"
+- **Real-Time Recipe Search**: Live text filtering across available recipes.
+- **Detailed Recipe View**: Full ingredient breakdowns, prep time indicator, and high-resolution visuals with fallback badging.
+- **Flexible Data Normalization**: Safe parsing for heterogeneous data schemas (array objects vs. comma-separated string ingredients).
+- **Robust Error Handling & Resilience**: Pull-to-refresh capabilities, error states, and connection recovery handling.
 
-> *User report:* "Some recipes show ingredients fine, but others either show nothing or break the screen. Looks inconsistent."
+---
 
-### Issue #3 — "Something's off with the API"
+## Architecture & Tech Stack
 
-> *Internal developer note:* "I was testing the backend with curl and noticed `GET /recipes/<some-id-that-doesnt-exist>` behaves strangely. The frontend can't tell whether the recipe actually exists or not."
+### Backend Service
+- **Language**: Go (1.21+)
+- **Framework**: [Fiber v2](https://gofiber.io/) (Express-inspired web framework for Go)
+- **Data Persistence**: Local JSON store with Fiber REST routing
+- **Testing**: Native Go `testing` package with Fiber HTTP test utilities
 
-## The feature request
+### Frontend Mobile Application
+- **Framework**: React Native with [Expo SDK 54](https://expo.dev/)
+- **Language**: TypeScript 5.9
+- **Components**: Functional React components utilizing Hooks and Safe Area Context
+- **API Client**: Standard `fetch` with strict TypeScript data normalization
 
-Users would like to:
-- **Search recipes by name** (a text input at the top of the list, filtering live)
-- **Tap a recipe to open a detail screen** that shows the title, image, prep time, and ingredients
+---
 
-How you structure this is up to you — keep it simple, but it should feel polished.
+## Repository Structure
 
-## Rules of the game
-
-- **Time budget: 10–60 minutes.** If you finish in 12 minutes — great, send it. If you hit 90 and aren't done, **stop** and submit what you have with notes on what you'd do next. We care more about how you think than whether everything is perfect.
-- **AI tools are encouraged.** Claude Code, Cursor, GitHub Copilot — use whatever you use day to day. We expect you to use AI well, not avoid it.
-- **You may modify any file in this repo**, except `backend/data/recipes.json`. The data is what it is — your code has to handle it correctly. (Treat that file the way you would a real production database you don't get to edit.)
-
-## How to run the project
-
-You'll need **Go 1.21+**, **Node 18+**, and the **Expo Go** app on your phone (or an iOS/Android simulator).
-
-```bash
-# Terminal 1 — backend
-cd backend
-go mod tidy
-go run main.go
-# Server listens on http://localhost:8080
-
-# Terminal 2 — frontend
-cd frontend
-npm install
-npx expo start
-# Scan the QR code with Expo Go, or press 'i' / 'a' for simulator
+```
+.
+├── .github/
+│   └── workflows/
+│       └── ci.yml          # GitHub Actions CI pipeline (Build, Test, Typecheck)
+├── backend/
+│   ├── data/
+│   │   └── recipes.json    # Recipe data store
+│   ├── handlers/
+│   │   ├── recipes.go      # REST HTTP handlers & JSON loading
+│   │   └── recipes_test.go # Backend unit test suite
+│   ├── models/
+│   │   └── recipe.go       # Go structs for Recipe data
+│   ├── main.go             # Application entry point & router
+│   ├── go.mod
+│   └── go.sum
+└── frontend/
+    ├── api/
+    │   └── recipes.ts      # API client & data normalization logic
+    ├── components/
+    │   ├── RecipeBadge.tsx # Image/badge fallback component
+    │   └── RecipeListModal.tsx # Main recipe feed & detail views
+    ├── App.tsx             # React Native application root
+    ├── index.ts            # Entry registration
+    ├── package.json
+    └── tsconfig.json
 ```
 
-If the frontend can't reach the backend, you may need to point it at your machine's local IP rather than `localhost` — adjust `frontend/api/recipes.ts` accordingly.
+---
 
-## How to record and submit
+## API Documentation
 
-**Record your entire session.** Start the recording when you open this README and stop when you open the Pull Request. Don't edit. Talk through what you're thinking as you go, in English.
+### Endpoints
 
-We want to see:
+#### 1. List Recipes
+- **Method**: `GET`
+- **Path**: `/recipes`
+- **Response**: `200 OK`
+- **Content-Type**: `application/json`
+- **Example Response**:
+```json
+[
+  {
+    "id": 1,
+    "title": "Grilled Chicken Bowl",
+    "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+    "prep_time": 25,
+    "ingredients": [
+      { "name": "Chicken breast", "weight": 200, "unit": "g" }
+    ]
+  }
+]
+```
 
-1. **How you investigate** — what you read, what you try first, what you ask AI.
-2. **How you reproduce each issue** — show it broken before you fix it.
-3. **How you verify your fixes work** — test the happy path and the edge cases you thought of.
-4. **How you stress-test the feature** — empty search, no results, special characters, slow network, a recipe that doesn't exist.
-5. **Honest assessment at the end** — Was there anything you weren't sure about? Anything you'd do differently with more time? Anything you couldn't reproduce or fix?
+#### 2. Get Recipe by ID
+- **Method**: `GET`
+- **Path**: `/recipes/:id`
+- **Responses**:
+  - `200 OK`: Recipe found
+  - `400 Bad Request`: Invalid ID format
+  - `404 Not Found`: Recipe ID does not exist
 
-**Bonus signal**: edge cases or related issues you noticed but weren't explicitly asked about.
+---
 
-> 🛠 **Heads up on tooling**: Loom's free tier caps at 5 minutes, which probably won't be enough. Figuring out a recording + sharing setup that works for you is part of the task. Surprise us.
+## Getting Started
 
-## What to submit
+### Prerequisites
+- **Go**: `1.21` or higher
+- **Node.js**: `18.x` or `20.x`
+- **npm**: `9.x` or higher
+- **Expo Go App** (optional, for physical device testing) or iOS/Android Simulator
 
-1. Fork this repository.
-2. Investigate, fix, and add the feature on a branch.
-3. Open a **Pull Request** back to this repo with:
-   - A clear description of what you found and what you changed
-   - A link to your full-session recording
-   - Anything else we should know
+---
 
-We respond to every submission within **48 hours**.
+### Backend Setup
 
-## What we're looking for
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Install dependencies & verify modules:
+   ```bash
+   go mod tidy
+   ```
+3. Run the Go server:
+   ```bash
+   go run main.go
+   ```
+   *The server will start listening on `http://localhost:8080`.*
 
-We're hiring someone who uses AI tools confidently and ships real work. Things we pay attention to:
+---
 
-- **You actually reproduced the issues.** You can describe specifically when each one triggers, not just "it crashed sometimes."
-- **You read the code.** There are patterns already in this repo that hint at how things should be done — did you find them?
-- **You used AI thoughtfully.** Your Loom shows what you prompted, what AI got wrong, and how you corrected it. We want to see you steering, not just accepting.
-- **You picked the right place to fix each bug.** When there's a choice between fixing on frontend vs. backend, you can explain *why* you chose what you chose.
-- **You tested your work.** You verified each fix before declaring it done, including edge cases that weren't in the requirements.
-- **Your code is clean.** Tight types (no `any` or `interface{}` everywhere), no dead code, consistent style with what's already in the repo.
-- **Your commits tell a story.** Separate commits per issue/feature, clear messages.
-- **You're honest about what you don't know.** Acknowledging uncertainty is a strong signal, not a weak one.
+### Frontend Setup
 
-## The role
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the Expo development server:
+   ```bash
+   npm start
+   ```
+4. Press `i` for iOS Simulator, `a` for Android Emulator, or scan the QR code using Expo Go on a physical device.
 
-If we like your submission, the next step is a short call to talk through your work and answer any questions you have about the role.
+---
 
-**Position:** Part-time developer (4h/day, Mon–Fri), $600/month flat, paid via Wise. Two-week paid trial first, then we commit. Fully remote, work from anywhere in Ukraine.
+## Testing & Quality Assurance
 
-Good luck — we're rooting for you.
+### Running Backend Unit Tests
+Run the Go unit test suite covering handler logic and Fiber endpoints:
+```bash
+cd backend
+go test -v ./...
+```
+
+### Running Frontend Typecheck
+Validate TypeScript types across the frontend application:
+```bash
+cd frontend
+npm run typecheck
+```
+
+---
+
+## CI/CD Workflow
+
+The project utilizes **GitHub Actions** for automated continuous integration on every `push` and `pull_request` targeting `main` or `master` branches:
+
+- **Backend CI**: Sets up Go, resolves dependencies, compiles binary builds, and runs `go test`.
+- **Frontend CI**: Sets up Node.js, installs cached npm modules, and runs `npm run typecheck`.
+
+---
+
+## License
+
+This project is maintained for demonstration and portfolio presentation purposes.
